@@ -1,5 +1,5 @@
-import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
-import { Book } from '@prisma/client';
+import { Injectable, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Book, Prisma } from '@prisma/client';
 import { PrismaService } from 'src/shared/services/prisma.service';
 import { CreateBookDTO } from './dtos/create-book.dto';
 import { UpdateBookDTO } from './dtos/update-book.dto';
@@ -62,7 +62,43 @@ export class BooksService {
     return this.prismaService.book.delete({ where: { id } })
   }
 
+  public async likeBook(bookId: string, userId: string) {
+    const book = await this.prismaService.book.findUnique({ where: { id: bookId } });
+    if (!book) throw new NotFoundException('Book not found');
 
+    const user = await this.prismaService.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
 
+    // Check if the connection already exists
+    const isAlreadyConnected = await this.prismaService.userOnBooks.findFirst({
+      where: {
+        bookId,
+        userId,
+      },
+    });
+
+    if (isAlreadyConnected) {
+      return book; // Return the book without performing the update
+    }
+
+    try {
+      // Connect the user to the book
+      await this.prismaService.userOnBooks.create({
+        data: {
+          book: {
+            connect: { id: bookId },
+          },
+          user: {
+            connect: { id: userId },
+          },
+        },
+      });
+
+      // Return the updated book after the connection
+      return this.prismaService.book.findUnique({ where: { id: bookId } });
+    } catch (error) {
+      throw new Error('Failed to connect user and book.');
+    }
+  }
 
 }

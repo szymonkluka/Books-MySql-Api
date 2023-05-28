@@ -47,4 +47,15 @@ export class BooksController {
     return { success: true };
   }
 
+  @Post('/like')
+  @UseGuards(JwtAuthGuard)
+  async likeBook(@Body() likeData: { bookId: string; userId: string }) {
+    const { bookId, userId } = likeData;
+
+    await this.booksService.likeBook(bookId, userId);
+
+    return { success: true };
+  }
+
+
 }

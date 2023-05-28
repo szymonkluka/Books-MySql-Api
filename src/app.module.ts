@@ -4,6 +4,8 @@ import {
   MiddlewareConsumer,
   RequestMethod,
 } from '@nestjs/common';
+import configuration from './config/configuration';
+import { ConfigModule } from '@nestjs/config';
 import * as cors from 'cors';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -14,7 +16,7 @@ import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
-  imports: [AuthorsModule, BooksModule, UsersModule, AuthModule, PrismaModule],
+  imports: [AuthorsModule, BooksModule, UsersModule, AuthModule, PrismaModule, ConfigModule.forRoot({ load: [configuration], isGlobal: true })],
   controllers: [AppController],
   providers: [AppService],
 })
